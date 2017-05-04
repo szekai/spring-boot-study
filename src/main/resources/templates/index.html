@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/main.css"/>
 </head>
 <body>
-
+    <h3 th:text="${#vars['flash.message']}" class="flash"></h3>
 <div>
     <h3 th:text="${page.number + 1} + ' of ' + ${page.totalPages}"/>
     <table>
@@ -20,9 +20,19 @@
             <td th:text="${image.id}"/>
             <td th:text="${image.name}"/>
             <td><img th:src="@{'/images' + ${image.name} + /raw}" class="thumbnail"/></td>
+            <td>
+                <form th:method="delete" th:action="@{'/images/' + ${image.name}}">
+                    <input type="submit" value="Delete" />
+                </form>
+            </td>
         </tr>
         </tbody>
     </table>
+
+    <form method="post" enctype="multipart/form-data" action="images">
+        <p><input type="file" name="file"/></p>
+        <p><input type="submit" value="Upload"/></p>
+    </form>
 </div>
 </body>
 </html>
