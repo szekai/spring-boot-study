@@ -2,6 +2,11 @@ package com.example;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.actuate.metrics.CounterService;
+import org.springframework.boot.actuate.metrics.GaugeService;
+import org.springframework.boot.actuate.metrics.Metric;
+import org.springframework.boot.actuate.metrics.repository.InMemoryMetricRepository;
+import org.springframework.boot.actuate.metrics.writer.Delta;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -25,11 +30,23 @@ public class ImageService {
 
     private final ImageRepository repository;
     private final ResourceLoader resourceLoader;
+    private final CounterService counterService;
+    private final GaugeService gaugeService;
+    private final InMemoryMetricRepository inMemoryMetricRepository;
 
     @Autowired
-    public ImageService(ImageRepository repository, ResourceLoader resourceLoader){
+    public ImageService(ImageRepository repository, ResourceLoader resourceLoader,
+                        CounterService counterService, GaugeService gaugeService,
+                        InMemoryMetricRepository inMemoryMetricRepository){
         this.repository = repository;
         this.resourceLoader = resourceLoader;
+        this.counterService = counterService;
+        this.gaugeService = gaugeService;
+        this.inMemoryMetricRepository = inMemoryMetricRepository
+
+        this.counterService.reset("files.uploaded");
+        this.gaugeService.submit("files.uploaded.lastBytes", 0);
+        this.inMemoryMetricRepository.set(new Metric<Number>("files.uploaded.totalBytes", 0));
     }
 
     public Page<Image> findPage(Pageable pageable){
@@ -44,6 +61,9 @@ public class ImageService {
         if(!file.isEmpty()){
             Files.copy(file.getInputStream(), Paths.get(UPLOAD_ROOT, file.getOriginalFilename()));
             repository.save(new Image(file.getOriginalFilename()));
+            counterService.increment("files.uploaded");
+            gaugeService.submit("files.uploaded.lastBytes", file.getSize());
+            inMemoryMetricRepository.increment(new Delta<Number>("files.uploaded.totalBytes", file.getSize()));
         }
     }
 
