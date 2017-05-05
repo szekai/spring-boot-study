@@ -42,7 +42,7 @@ public class ImageService {
         this.resourceLoader = resourceLoader;
         this.counterService = counterService;
         this.gaugeService = gaugeService;
-        this.inMemoryMetricRepository = inMemoryMetricRepository
+        this.inMemoryMetricRepository = inMemoryMetricRepository;
 
         this.counterService.reset("files.uploaded");
         this.gaugeService.submit("files.uploaded.lastBytes", 0);
